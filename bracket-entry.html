@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WC 2026 Bracket Pool</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f0;color:#1a1a1a;font-size:15px}
+.container{max-width:680px;margin:0 auto;padding:16px}
+.header{background:#fff;border:1px solid #e5e5e0;border-radius:12px;padding:16px 20px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:18px;font-weight:600}
+.header .sub{font-size:13px;color:#666;margin-top:2px}
+.step-bar{display:flex;gap:0;border:1px solid #e5e5e0;border-radius:8px;overflow:hidden;margin-bottom:14px;background:#fff}
+.step{flex:1;padding:8px 4px;font-size:12px;text-align:center;color:#888;border-right:1px solid #e5e5e0;cursor:pointer;background:none;border-top:none;border-bottom:none}
+.step:last-child{border-right:none}
+.step.active{background:#1a1a1a;color:#fff;font-weight:500}
+.step.done{background:#e1f5ee;color:#085041}
+.page{display:none}.page.active{display:block}
+.card{background:#fff;border:1px solid #e5e5e0;border-radius:12px;padding:16px 20px;margin-bottom:12px}
+.card-title{font-size:15px;font-weight:600;margin-bottom:12px}
+label{font-size:13px;color:#666;display:block;margin-bottom:4px}
+input[type=text],input[type=email],input[type=password]{width:100%;padding:9px 12px;font-size:14px;border:1px solid #ddd;border-radius:8px;outline:none;background:#fff;color:#1a1a1a}
+input:focus{border-color:#888}
+.btn{padding:9px 18px;font-size:14px;border:1px solid #ddd;border-radius:8px;background:#fff;color:#1a1a1a;cursor:pointer;font-weight:500}
+.btn:hover{background:#f5f5f0}
+.btn-primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.btn-primary:hover{background:#333}
+.btn-sm{padding:5px 12px;font-size:12px}
+.group-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin-bottom:12px}
+.group-card{background:#fff;border:1px solid #e5e5e0;border-radius:10px;padding:12px}
+.group-title{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.team-row{display:flex;align-items:center;gap:6px;padding:5px 7px;border-radius:7px;cursor:pointer;border:1px solid transparent;margin-bottom:3px;font-size:13px}
+.team-row:hover{background:#f5f5f0}
+.team-row.p1{background:#e6f1fb;border-color:#b5d4f4}
+.team-row.p2{background:#e1f5ee;border-color:#9fe1cb}
+.badge{font-size:10px;padding:1px 6px;border-radius:8px;margin-left:auto;font-weight:600}
+.b1{background:#b5d4f4;color:#0c447c}.b2{background:#9fe1cb;color:#085041}
+.group-hint{font-size:11px;color:#888;margin-top:5px}
+.round-hdr{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 6px}
+.match-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;margin-bottom:4px}
+.matchup{border:1px solid #e5e5e0;border-radius:8px;overflow:hidden}
+.matchup.complete{border-color:#9fe1cb}
+.team-btn{width:100%;padding:7px 10px;font-size:12px;background:#fff;border:none;cursor:pointer;text-align:left;color:#1a1a1a;display:flex;align-items:center;gap:6px;min-height:32px}
+.team-btn:hover:not(:disabled){background:#f5f5f0}
+.team-btn.selected{background:#e6f1fb;font-weight:600;color:#0c447c}
+.team-btn.winner{background:#e1f5ee;font-weight:600;color:#085041}
+.team-btn.loser{color:#bbb}
+.team-btn:disabled{cursor:default;color:#bbb}
+.team-btn .check{margin-left:auto;font-size:11px}
+.vs-line{height:1px;background:#e5e5e0}
+.champ-box{border:1px solid #9fe1cb;border-radius:10px;background:#e1f5ee;padding:12px 16px;display:inline-block;margin-top:10px}
+.nav{display:flex;gap:8px;align-items:center;margin-top:12px}
+.prog{font-size:12px;color:#888}
+.msg{padding:10px 12px;font-size:13px;border-radius:8px;margin-top:8px}
+.msg-e{background:#fce8e8;color:#a32d2d}
+.msg-s{background:#e1f5ee;color:#085041}
+.summary-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #eee;font-size:13px}
+.summary-row:last-child{border-bottom:none}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid #ddd;border-top-color:#1a1a1a;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.locked-badge{background:#e1f5ee;color:#085041;font-size:11px;padding:2px 8px;border-radius:8px;font-weight:600}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div>
+      <h1>⚽ WC 2026 Bracket Pool</h1>
+      <div class="sub" id="tourney-sub">FIFA World Cup 2026</div>
+    </div>
+    <span id="header-name" style="font-size:13px;color:#666"></span>
+  </div>
+
+  <div class="step-bar">
+    <div class="step active" id="step0">1. Access</div>
+    <div class="step" id="step1">2. Your info</div>
+    <div class="step" id="step2">3. Groups A–F</div>
+    <div class="step" id="step3">4. Groups G–L</div>
+    <div class="step" id="step4">5. Knockout</div>
+    <div class="step" id="step5">6. Tiebreaker</div>
+    <div class="step" id="step6">7. Submit</div>
+  </div>
+
+  <!-- Step 0: Access code -->
+  <div class="page active" id="page-0">
+    <div class="card">
+      <div class="card-title">Enter access code</div>
+      <p style="font-size:13px;color:#666;margin-bottom:12px">Ask the pool organizer for the code to enter your bracket.</p>
+      <label>Access code</label>
+      <input type="password" id="access-code" placeholder="Enter code" style="width:220px" />
+      <div id="p0-msg"></div>
+    </div>
+    <div class="nav"><button class="btn btn-primary" onclick="verifyCode()">Continue →</button></div>
+  </div>
+
+  <!-- Step 1: Name -->
+  <div class="page" id="page-1">
+    <div class="card">
+      <div class="card-title">Who are you?</div>
+      <div style="margin-bottom:10px">
+        <label>Your name</label>
+        <input type="text" id="entry-name" placeholder="e.g. Carlos" style="width:260px" />
+      </div>
+      <div>
+        <label>Email <span style="color:#a32d2d">*</span></label>
+        <input type="email" id="entry-email" placeholder="carlos@email.com" style="width:260px" required />
+        <div style="font-size:11px;color:#888;margin-top:4px">Used to identify your entry — one bracket per email address.</div>
+      </div>
+      <div id="p1-msg"></div>
+    </div>
+    <div class="card" style="font-size:13px;color:#666;line-height:1.6">
+      <div style="font-weight:600;color:#1a1a1a;margin-bottom:6px">How it works</div>
+      Pick <span style="background:#b5d4f4;color:#0c447c;padding:1px 6px;border-radius:8px;font-size:11px;font-weight:600">1st</span> and <span style="background:#9fe1cb;color:#085041;padding:1px 6px;border-radius:8px;font-size:11px;font-weight:600">2nd</span> place for each of the 12 groups. Those picks seed your knockout bracket, which you fill out round by round all the way to your champion.
+    </div>
+    <div class="nav"><button class="btn btn-sm" onclick="goStep(0)">← Back</button><button class="btn btn-primary" onclick="nextStep(1)">Start picking →</button></div>
+  </div>
+
+  <!-- Step 2: Groups A-F -->
+  <div class="page" id="page-2">
+    <div style="font-size:13px;color:#666;margin-bottom:10px">Tap once for <span style="background:#b5d4f4;color:#0c447c;padding:1px 5px;border-radius:8px;font-size:11px;font-weight:600">1st</span>, again for <span style="background:#9fe1cb;color:#085041;padding:1px 5px;border-radius:8px;font-size:11px;font-weight:600">2nd</span>, again to clear.</div>
+    <div class="group-grid" id="groups-af"></div>
+    <div id="p2-msg"></div>
+    <div class="nav"><button class="btn btn-sm" onclick="goStep(1)">← Back</button><button class="btn btn-primary btn-sm" onclick="nextStep(2)">Groups G–L →</button><span class="prog" id="prog-af"></span></div>
+  </div>
+
+  <!-- Step 3: Groups G-L -->
+  <div class="page" id="page-3">
+    <div style="font-size:13px;color:#666;margin-bottom:10px">Tap once for <span style="background:#b5d4f4;color:#0c447c;padding:1px 5px;border-radius:8px;font-size:11px;font-weight:600">1st</span>, again for <span style="background:#9fe1cb;color:#085041;padding:1px 5px;border-radius:8px;font-size:11px;font-weight:600">2nd</span>, again to clear.</div>
+    <div class="group-grid" id="groups-gl"></div>
+    <div id="p3-msg"></div>
+    <div class="nav"><button class="btn btn-sm" onclick="goStep(2)">← Back</button><button class="btn btn-primary btn-sm" onclick="nextStep(3)">Build bracket →</button><span class="prog" id="prog-gl"></span></div>
+  </div>
+
+  <!-- Step 4: Knockout -->
+  <div class="page" id="page-4">
+    <div style="font-size:13px;color:#666;margin-bottom:10px">Click the winning team in each matchup to advance them. Your group picks are pre-filled.</div>
+    <div id="knockout-area"></div>
+    <div id="p4-msg"></div>
+    <div class="nav"><button class="btn btn-sm" onclick="goStep(3)">← Back</button><button class="btn btn-primary btn-sm" onclick="nextStep(4)">Review & submit →</button></div>
+  </div>
+
+  <!-- Step 5: Tiebreaker -->
+  <div class="page" id="page-5">
+    <div class="card">
+      <div class="card-title">Final score tiebreaker</div>
+      <p style="font-size:13px;color:#666;margin-bottom:16px">If there's a tie on points, whoever is closest to the actual final score wins. Enter your predicted goals for each team in the championship game.</p>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="text-align:center">
+          <div id="tb-team1" style="font-size:13px;font-weight:600;color:#666;margin-bottom:6px;min-width:100px">Finalist 1</div>
+          <input type="number" id="tb-score1" min="0" max="20" placeholder="0" style="width:72px;padding:10px;font-size:22px;font-weight:600;text-align:center;border:1px solid #ddd;border-radius:8px;background:#fff;color:#1a1a1a" />
+        </div>
+        <div style="font-size:20px;font-weight:300;color:#bbb;padding-top:20px">–</div>
+        <div style="text-align:center">
+          <div id="tb-team2" style="font-size:13px;font-weight:600;color:#666;margin-bottom:6px;min-width:100px">Finalist 2</div>
+          <input type="number" id="tb-score2" min="0" max="20" placeholder="0" style="width:72px;padding:10px;font-size:22px;font-weight:600;text-align:center;border:1px solid #ddd;border-radius:8px;background:#fff;color:#1a1a1a" />
+        </div>
+      </div>
+      <div style="font-size:12px;color:#aaa;margin-top:12px">Tiebreaker is based on total goal difference from the actual score. Closest wins.</div>
+    </div>
+    <div id="p5-msg"></div>
+    <div class="nav"><button class="btn btn-sm" onclick="goStep(4)">← Back</button><button class="btn btn-primary btn-sm" onclick="nextStep(5)">Review & submit →</button></div>
+  </div>
+
+  <!-- Step 6: Review & Submit -->
+  <div class="page" id="page-6">
+    <div class="card" id="summary-card"></div>
+    <div id="p6-msg"></div>
+    <div class="nav"><button class="btn btn-sm" onclick="goStep(5)">← Edit tiebreaker</button><button class="btn btn-primary" id="submit-btn" onclick="submitBracket()">Submit bracket →</button></div>
+  </div>
+</div>
+
+<script>
+// ── Config ───────────────────────────────────────────────────
+const API_URL = "https://script.google.com/macros/s/AKfycbxgT4rz8znA_-tGAnHA71pOtUHQ0B2rs0ApO0mIuVxSFjL-l_4a8Se8U0QhCwv6zZssEg/exec";
+
+const GROUPS_DEF = {
+  A:["Qatar","Ecuador","Senegal","Netherlands"],
+  B:["England","IR Iran","USA","Wales"],
+  C:["Argentina","Saudi Arabia","Mexico","Poland"],
+  D:["France","Australia","Denmark","Tunisia"],
+  E:["Spain","Costa Rica","Germany","Japan"],
+  F:["Belgium","Canada","Morocco","Croatia"],
+  G:["Brazil","Serbia","Switzerland","Cameroon"],
+  H:["Portugal","Ghana","Uruguay","South Korea"],
+  I:["USA","Mexico","Canada","Honduras"],
+  J:["Colombia","Chile","Ecuador","Peru"],
+  K:["Germany","Netherlands","Belgium","Denmark"],
+  L:["Argentina","Brazil","Uruguay","Paraguay"]
+};
+
+let accessCode = "", entryName = "", entryEmail = "";
+let groupPicks = {}, ko = {}, tbScore = { s1: null, s2: null };
+
+// ── API ──────────────────────────────────────────────────────
+async function api(payload) {
+  const r = await fetch(API_URL, { method:"POST", body: JSON.stringify(payload) });
+  return r.json();
+}
+
+// ── Navigation ───────────────────────────────────────────────
+function goStep(n) {
+  document.querySelectorAll(".page").forEach((p,i) => p.classList.toggle("active", i === n));
+  document.querySelectorAll(".step").forEach((s,i) => {
+    s.classList.remove("active","done");
+    if (i === n) s.classList.add("active");
+    else if (i < n) s.classList.add("done");
+  });
+  if (n === 2) renderGroups("af");
+  if (n === 3) renderGroups("gl");
+  if (n === 4) buildKnockout();
+  if (n === 5) updateTiebreakerTeams();
+  if (n === 6) renderSummary();
+}
+
+async function verifyCode() {
+  const code = document.getElementById("access-code").value.trim();
+  if (!code) { showMsg("p0-msg","Enter the access code","e"); return; }
+  setLoading("p0-msg","Verifying…");
+  try {
+    const res = await api({ action:"verifyCode", code });
+    if (res.ok) { accessCode = code; goStep(1); }
+    else showMsg("p0-msg","Incorrect code. Ask the pool organizer.","e");
+  } catch(e) { showMsg("p0-msg","Could not connect. Check the API URL is set.","e"); }
+}
+
+async function nextStep(from) {
+  if (from === 1) {
+    const nm = document.getElementById("entry-name").value.trim();
+    const em = document.getElementById("entry-email").value.trim();
+    if (!nm) { showMsg("p1-msg","Please enter your name","e"); return; }
+    if (!em) { showMsg("p1-msg","Email address is required","e"); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { showMsg("p1-msg","Please enter a valid email address","e"); return; }
+    setLoading("p1-msg","Checking email…");
+    try {
+      const res = await api({ action:"checkEmail", code:accessCode, email:em });
+      if (res.exists) {
+        showMsg("p1-msg","That email already has a bracket submitted. Each person can only enter once.","e");
+        return;
+      }
+    } catch(e) { /* if API unreachable, allow through */ }
+    entryName = nm; entryEmail = em;
+    document.getElementById("header-name").textContent = entryName;
+    document.getElementById("p1-msg").textContent = "";
+    document.getElementById("p1-msg").className = "";
+    goStep(2); return;
+  }
+  if (from === 2) {
+    const miss = checkGroups("af");
+    if (miss.length) { showMsg("p2-msg","Need picks for groups: "+miss.join(", "),"e"); return; }
+    goStep(3); return;
+  }
+  if (from === 3) {
+    const miss = checkGroups("gl");
+    if (miss.length) { showMsg("p3-msg","Need picks for groups: "+miss.join(", "),"e"); return; }
+    goStep(4); return;
+  }
+  if (from === 4) {
+    if (!ko["final_winner"]) { showMsg("p4-msg","Please pick a champion to continue","e"); return; }
+    goStep(5); return;
+  }
+  if (from === 5) {
+    const s1 = document.getElementById("tb-score1").value;
+    const s2 = document.getElementById("tb-score2").value;
+    if (s1 === "" || s2 === "") { showMsg("p5-msg","Please enter a predicted score for both finalists","e"); return; }
+    if (parseInt(s1) < 0 || parseInt(s2) < 0) { showMsg("p5-msg","Scores can't be negative","e"); return; }
+    tbScore = { s1: parseInt(s1), s2: parseInt(s2) };
+    goStep(6); return;
+  }
+}
+
+function checkGroups(set) {
+  const letters = set==="af" ? ["A","B","C","D","E","F"] : ["G","H","I","J","K","L"];
+  return letters.filter(g => !groupPicks[g] || !groupPicks[g][0] || !groupPicks[g][1]);
+}
+
+// ── Groups ───────────────────────────────────────────────────
+function renderGroups(set) {
+  const letters = set==="af" ? ["A","B","C","D","E","F"] : ["G","H","I","J","K","L"];
+  const el = document.getElementById("groups-"+set); el.innerHTML = "";
+  letters.forEach(g => {
+    const card = document.createElement("div"); card.className = "group-card";
+    card.innerHTML = '<div class="group-title">Group '+g+'</div>';
+    GROUPS_DEF[g].forEach(team => {
+      const row = document.createElement("div"); row.className = "team-row";
+      const picks = groupPicks[g] || [];
+      const pos = picks.indexOf(team);
+      if (pos===0) row.classList.add("p1");
+      if (pos===1) row.classList.add("p2");
+      row.innerHTML = '<span style="flex:1">'+team+'</span>'+(pos===0?'<span class="badge b1">1st</span>':pos===1?'<span class="badge b2">2nd</span>':"");
+      row.onclick = () => togglePick(g, team, set);
+      card.appendChild(row);
+    });
+    const hint = document.createElement("div"); hint.className = "group-hint";
+    const p = groupPicks[g] || [];
+    hint.textContent = p[0]&&p[1] ? "✓ "+p[0]+" 1st, "+p[1]+" 2nd" : p[0] ? p[0]+" — pick 2nd" : "Pick 1st place";
+    card.appendChild(hint);
+    el.appendChild(card);
+  });
+  updateProg(set);
+}
+
+function togglePick(g, team, set) {
+  if (!groupPicks[g]) groupPicks[g] = [];
+  const p = groupPicks[g], pos = p.indexOf(team);
+  if (pos===0) p.splice(0,1);
+  else if (pos===1) p.splice(1,1);
+  else if (!p[0]) p[0] = team;
+  else if (!p[1] && team !== p[0]) p[1] = team;
+  else groupPicks[g] = [team];
+  renderGroups(set);
+}
+
+function updateProg(set) {
+  const letters = set==="af" ? ["A","B","C","D","E","F"] : ["G","H","I","J","K","L"];
+  const done = letters.filter(g => groupPicks[g]&&groupPicks[g][0]&&groupPicks[g][1]).length;
+  const el = document.getElementById("prog-"+set);
+  if (el) el.textContent = done+"/6 groups done";
+}
+
+// ── Knockout ─────────────────────────────────────────────────
+function gp(g,pos){ return (groupPicks[g]&&groupPicks[g][pos]) || "?"; }
+
+function getR32(){ return [{id:"r32_0",t1:gp("A",0),t2:gp("B",1)},{id:"r32_1",t1:gp("C",0),t2:gp("D",1)},{id:"r32_2",t1:gp("E",0),t2:gp("F",1)},{id:"r32_3",t1:gp("G",0),t2:gp("H",1)},{id:"r32_4",t1:gp("I",0),t2:gp("J",1)},{id:"r32_5",t1:gp("K",0),t2:gp("L",1)},{id:"r32_6",t1:gp("A",1),t2:gp("B",0)},{id:"r32_7",t1:gp("C",1),t2:gp("D",0)},{id:"r32_8",t1:gp("E",1),t2:gp("F",0)},{id:"r32_9",t1:gp("G",1),t2:gp("H",0)},{id:"r32_10",t1:gp("I",1),t2:gp("J",0)},{id:"r32_11",t1:gp("K",1),t2:gp("L",0)},{id:"r32_12",t1:"3rd Slot 1",t2:"3rd Slot 2"},{id:"r32_13",t1:"3rd Slot 3",t2:"3rd Slot 4"},{id:"r32_14",t1:"3rd Slot 5",t2:"3rd Slot 6"},{id:"r32_15",t1:"3rd Slot 7",t2:"3rd Slot 8"}]; }
+function getR16(){ return [{id:"r16_0",t1:ko.r32_0,t2:ko.r32_1},{id:"r16_1",t1:ko.r32_2,t2:ko.r32_3},{id:"r16_2",t1:ko.r32_4,t2:ko.r32_5},{id:"r16_3",t1:ko.r32_6,t2:ko.r32_7},{id:"r16_4",t1:ko.r32_8,t2:ko.r32_9},{id:"r16_5",t1:ko.r32_10,t2:ko.r32_11},{id:"r16_6",t1:ko.r32_12,t2:ko.r32_13},{id:"r16_7",t1:ko.r32_14,t2:ko.r32_15}]; }
+function getQF(){ return [{id:"qf_0",t1:ko.r16_0,t2:ko.r16_1},{id:"qf_1",t1:ko.r16_2,t2:ko.r16_3},{id:"qf_2",t1:ko.r16_4,t2:ko.r16_5},{id:"qf_3",t1:ko.r16_6,t2:ko.r16_7}]; }
+function getSF(){ return [{id:"sf_0",t1:ko.qf_0,t2:ko.qf_1},{id:"sf_1",t1:ko.qf_2,t2:ko.qf_3}]; }
+
+function buildKnockout() {
+  const el = document.getElementById("knockout-area"); el.innerHTML = "";
+  const rounds = [{label:"Round of 32",matches:getR32()},{label:"Round of 16",matches:getR16()},{label:"Quarterfinals",matches:getQF()},{label:"Semifinals",matches:getSF()}];
+  rounds.forEach(round => {
+    const hdr = document.createElement("div"); hdr.className = "round-hdr"; hdr.textContent = round.label; el.appendChild(hdr);
+    const grid = document.createElement("div"); grid.className = "match-grid";
+    round.matches.forEach(m => {
+      const mc = document.createElement("div"); mc.className = "matchup"+(ko[m.id]?" complete":"");
+      [m.t1,m.t2].forEach((team,ti) => {
+        if (ti===1) { const vl=document.createElement("div"); vl.className="vs-line"; mc.appendChild(vl); }
+        const btn = document.createElement("button"); btn.className = "team-btn";
+        if (!team||team==="?") { btn.textContent="TBD"; btn.disabled=true; }
+        else {
+          btn.innerHTML = team+(ko[m.id]===team?'<span class="check">✓</span>':"");
+          if (ko[m.id]===team) btn.classList.add("selected");
+          else if (ko[m.id]&&ko[m.id]!==team) btn.classList.add("loser");
+          btn.onclick = () => { ko[m.id]=team; clearDownstream(m.id); buildKnockout(); };
+        }
+        mc.appendChild(btn);
+      });
+      grid.appendChild(mc);
+    });
+    el.appendChild(grid);
+  });
+  const fhdr=document.createElement("div"); fhdr.className="round-hdr"; fhdr.textContent="Final"; el.appendChild(fhdr);
+  const fgrid=document.createElement("div"); fgrid.className="match-grid";
+  const fmc=document.createElement("div"); fmc.className="matchup"+(ko.final_winner?" complete":"");
+  [ko.sf_0,ko.sf_1].forEach((team,ti) => {
+    if (ti===1) { const vl=document.createElement("div"); vl.className="vs-line"; fmc.appendChild(vl); }
+    const btn=document.createElement("button"); btn.className="team-btn";
+    if (!team) { btn.textContent="TBD"; btn.disabled=true; }
+    else {
+      btn.innerHTML=team+(ko.final_winner===team?'<span class="check">✓</span>':"");
+      if (ko.final_winner===team) btn.classList.add("winner");
+      else if (ko.final_winner&&ko.final_winner!==team) btn.classList.add("loser");
+      btn.onclick=()=>{ ko.final_winner=team; buildKnockout(); };
+    }
+    fmc.appendChild(btn);
+  });
+  fgrid.appendChild(fmc); el.appendChild(fgrid);
+  if (ko.final_winner) {
+    const cb=document.createElement("div"); cb.className="champ-box";
+    cb.innerHTML='<div style="font-size:11px;color:#085041;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Your champion</div><div style="font-size:18px;font-weight:600;color:#085041;margin-top:2px">'+ko.final_winner+'</div>';
+    el.appendChild(cb);
+  }
+}
+
+function clearDownstream(id) {
+  const p = id.split("_")[0];
+  if (p==="r32") ["r16_0","r16_1","r16_2","r16_3","r16_4","r16_5","r16_6","r16_7","qf_0","qf_1","qf_2","qf_3","sf_0","sf_1","final_winner"].forEach(k=>delete ko[k]);
+  else if (p==="r16") ["qf_0","qf_1","qf_2","qf_3","sf_0","sf_1","final_winner"].forEach(k=>delete ko[k]);
+  else if (p==="qf") ["sf_0","sf_1","final_winner"].forEach(k=>delete ko[k]);
+  else if (p==="sf") delete ko.final_winner;
+}
+
+function updateTiebreakerTeams() {
+  const t1 = ko.sf_0 || "Finalist 1";
+  const t2 = ko.sf_1 || "Finalist 2";
+  document.getElementById("tb-team1").textContent = t1;
+  document.getElementById("tb-team2").textContent = t2;
+  if (tbScore.s1 !== null) document.getElementById("tb-score1").value = tbScore.s1;
+  if (tbScore.s2 !== null) document.getElementById("tb-score2").value = tbScore.s2;
+}
+
+
+function renderSummary() {
+  const el = document.getElementById("summary-card");
+  const gDone = Object.keys(GROUPS_DEF).filter(g=>groupPicks[g]&&groupPicks[g][0]&&groupPicks[g][1]).length;
+  const r32 = Object.keys(ko).filter(k=>k.startsWith("r32")).length;
+  const r16 = Object.keys(ko).filter(k=>k.startsWith("r16")).length;
+  const qf  = Object.keys(ko).filter(k=>k.startsWith("qf")).length;
+  const sf  = Object.keys(ko).filter(k=>k.startsWith("sf")).length;
+  const t1  = ko.sf_0 || "Finalist 1";
+  const t2  = ko.sf_1 || "Finalist 2";
+  const tbStr = tbScore.s1 !== null ? t1+" "+tbScore.s1+" – "+tbScore.s2+" "+t2 : "—";
+  el.innerHTML = '<div class="card-title">Review your bracket</div>';
+  [["Name",entryName],["Groups complete",gDone+"/12"],["Round of 32 picks",r32+"/16"],["Round of 16 picks",r16+"/8"],["Quarterfinalists",qf+"/4"],["Semifinalists",sf+"/2"],["Champion",ko.final_winner||"—"],["Final score tiebreaker",tbStr]].forEach(([l,v])=>{
+    const row=document.createElement("div"); row.className="summary-row";
+    row.innerHTML='<span style="color:#666">'+l+'</span><span style="font-weight:600">'+v+'</span>';
+    el.appendChild(row);
+  });
+}
+
+async function submitBracket() {
+  if (!ko.final_winner) { showMsg("p6-msg","Please pick a champion","e"); return; }
+  if (tbScore.s1 === null || tbScore.s2 === null) { showMsg("p6-msg","Please go back and enter your tiebreaker score","e"); return; }
+  const btn = document.getElementById("submit-btn");
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Submitting…';
+  try {
+    const res = await api({ action:"submitBracket", code:accessCode, name:entryName, email:entryEmail, groupPicks, koPicks:ko, tiebreaker:tbScore });
+    if (res.ok) {
+      document.getElementById("page-6").innerHTML = '<div style="text-align:center;padding:2.5rem 1rem"><div style="font-size:48px;margin-bottom:12px">✅</div><div style="font-size:20px;font-weight:600;margin-bottom:8px">Bracket submitted!</div><div style="font-size:14px;color:#666;margin-bottom:4px">'+entryName+', your picks are locked in.</div><div style="font-size:14px;color:#666;margin-top:4px">Champion: <strong>'+ko.final_winner+'</strong></div><div style="font-size:14px;color:#666;margin-top:4px">Final score: <strong>'+(ko.sf_0||"?")+' '+tbScore.s1+' – '+tbScore.s2+' '+(ko.sf_1||"?")+'</strong></div></div>';
+    } else if (res.duplicate) {
+      showMsg("p6-msg","A bracket for "+entryEmail+" already exists. Only one entry per email is allowed.","e");
+      btn.disabled=false; btn.textContent="Submit bracket →";
+    } else {
+      showMsg("p6-msg", res.error||"Submission failed. Try again.","e");
+      btn.disabled=false; btn.textContent="Submit bracket →";
+    }
+  } catch(e) {
+    showMsg("p6-msg","Connection error. Please try again.","e");
+    btn.disabled=false; btn.textContent="Submit bracket →";
+  }
+}
+
+// ── Helpers ──────────────────────────────────────────────────
+function showMsg(id,msg,type){const el=document.getElementById(id);if(!el)return;el.className="msg msg-"+type;el.textContent=msg;setTimeout(()=>{el.textContent="";el.className=""},4000);}
+function setLoading(id,msg){const el=document.getElementById(id);if(!el)return;el.className="msg";el.innerHTML='<span class="spinner"></span>'+msg;}
+
+// Load config from API on start
+(async () => {
+  if (API_URL.includes("PASTE_YOUR")) return;
+  try { const cfg=await api({action:"getConfig"}); if(cfg.ok&&cfg.tournamentName) document.getElementById("tourney-sub").textContent=cfg.tournamentName; } catch(e){}
+})();
+</script>
+</body>
+</html>
